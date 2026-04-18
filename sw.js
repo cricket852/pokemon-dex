@@ -1,5 +1,5 @@
-const CACHE_NAME = 'pokemon-dex-v1';
-const STATIC_ASSETS = ['/', '/index.html', '/manifest.json'];
+const CACHE_NAME = 'pokemon-dex-v2';
+const STATIC_ASSETS = ['/pokemon-dex/', '/pokemon-dex/index.html', '/pokemon-dex/manifest.json'];
 
 self.addEventListener('install', event => {
   event.waitUntil(

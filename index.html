@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>포켓몬 챔피언스 도감</title>
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="/pokemon-dex/manifest.json">
     <meta name="theme-color" content="#ef4444">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="챔피언스덱스">
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com"><\/script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;700;900&display=swap');
         body { font-family: 'Pretendard', sans-serif; -webkit-font-smoothing: antialiased; }
@@ -20,153 +20,394 @@
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen font-sans">
-    <div class="max-w-md mx-auto p-4 pb-20">
-        <div class="sticky top-0 bg-gray-100 pt-4 pb-4 z-30">
-            <div class="flex items-center justify-between mb-4">
-                <h1 class="text-2xl font-black text-gray-900 tracking-tighter">포켓몬 챔피언스 도감</h1>
-                <span class="text-[10px] font-bold bg-white px-2 py-1 rounded-full text-red-500 shadow-sm border border-red-50">Live: 2026-04-18</span>
-            </div>
-            <div class="relative shadow-xl rounded-2xl">
-                <input type="text" id="searchInput" placeholder="이름 입력 (예: 루카리오, 가디안)"
-                    class="w-full p-5 rounded-2xl border-none focus:ring-2 focus:ring-red-500 outline-none text-lg font-bold">
-                <div id="loadingBox" class="absolute right-5 top-5 hidden">
-                    <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-red-500"></div>
-                </div>
-            </div>
-            <div id="suggestionList" class="mt-2 bg-white rounded-2xl shadow-2xl max-h-80 overflow-y-auto hidden hide-scroll border border-gray-100"></div>
+<div class="max-w-md mx-auto p-4 pb-20">
+    <div class="sticky top-0 bg-gray-100 pt-4 pb-4 z-30">
+        <div class="flex items-center justify-between mb-4">
+            <h1 class="text-2xl font-black text-gray-900 tracking-tighter">포켓몬 챔피언스 도감</h1>
+            <span class="text-[10px] font-bold bg-white px-2 py-1 rounded-full text-red-500 shadow-sm border border-red-50">Live</span>
         </div>
-        <div id="detailView" class="hidden">
-            <div class="bg-white rounded-[2.5rem] shadow-2xl overflow-hidden mb-6 border border-white">
-                <div id="cardHeader" class="p-10 text-center relative transition-colors duration-500">
-                    <img id="pokeImg" src="" alt="" class="w-56 h-56 mx-auto drop-shadow-2xl z-10 relative">
-                    <h2 id="nameKr" class="text-4xl font-black text-gray-900 mt-6 tracking-tight"></h2>
-                    <p id="nameEn" class="text-gray-400 text-sm font-bold tracking-widest uppercase mt-1"></p>
+        <div class="relative shadow-xl rounded-2xl">
+            <input type="text" id="searchInput" placeholder="한국어 이름 입력 (예: 리자몽)"
+                class="w-full p-5 rounded-2xl border-none focus:ring-2 focus:ring-red-500 outline-none text-lg font-bold">
+            <div id="loadingBox" class="absolute right-5 top-5 hidden">
+                <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-red-500"></div>
+            </div>
+        </div>
+        <div id="suggestionList" class="mt-2 bg-white rounded-2xl shadow-2xl max-h-80 overflow-y-auto hidden hide-scroll border border-gray-100"></div>
+    </div>
+
+    <div id="detailView" class="hidden">
+        <div class="bg-white rounded-[2.5rem] shadow-2xl overflow-hidden mb-6">
+            <div id="cardHeader" class="p-10 text-center transition-colors duration-500">
+                <img id="pokeImg" src="" alt="" class="w-56 h-56 mx-auto drop-shadow-2xl">
+                <h2 id="nameKr" class="text-4xl font-black text-gray-900 mt-6 tracking-tight"></h2>
+                <p id="nameEn" class="text-gray-400 text-sm font-bold tracking-widest uppercase mt-1"></p>
+            </div>
+            <div class="p-8">
+                <div class="flex justify-between items-end mb-6">
+                    <span class="text-gray-400 font-black text-[10px] uppercase tracking-[0.2em]">Total Stats</span>
+                    <span id="statTotal" class="text-5xl font-black text-gray-900 leading-none"></span>
                 </div>
-                <div class="p-8">
-                    <div class="flex justify-between items-end mb-6">
-                        <span class="text-gray-400 font-black text-[10px] uppercase tracking-[0.2em]">Total Stats</span>
-                        <span id="statTotal" class="text-5xl font-black text-gray-900 leading-none"></span>
+                <div id="statsBox" class="space-y-4 mb-10"></div>
+                <div class="mb-10">
+                    <h3 class="text-sm font-black text-gray-900 mb-4 flex items-center gap-2">
+                        <span class="w-1 h-4 bg-red-500 rounded-full"></span> 특성 정보
+                    </h3>
+                    <div id="abilityBox" class="space-y-3"></div>
+                </div>
+                <div class="space-y-6">
+                    <div>
+                        <h3 class="text-sm font-black text-blue-600 mb-3 uppercase tracking-tighter italic">강점 (반감 이하)</h3>
+                        <div id="strengths" class="flex flex-wrap gap-2"></div>
                     </div>
-                    <div id="statsBox" class="space-y-4 mb-10"></div>
-                    <div class="mb-10">
-                        <h3 class="text-sm font-black text-gray-900 mb-4 flex items-center gap-2">
-                            <span class="w-1 h-4 bg-red-500 rounded-full"></span> 특성 정보
-                        </h3>
-                        <div id="abilityBox" class="space-y-3"></div>
-                    </div>
-                    <div class="space-y-6">
-                        <div>
-                            <h3 class="text-sm font-black text-blue-600 mb-3 uppercase tracking-tighter italic">강점 (반감 이하)</h3>
-                            <div id="strengths" class="flex flex-wrap gap-2"></div>
-                        </div>
-                        <div>
-                            <h3 class="text-sm font-black text-red-600 mb-3 uppercase tracking-tighter italic">약점 (2배 이상)</h3>
-                            <div id="weaknesses" class="flex flex-wrap gap-2"></div>
-                        </div>
+                    <div>
+                        <h3 class="text-sm font-black text-red-600 mb-3 uppercase tracking-tighter italic">약점 (2배 이상)</h3>
+                        <div id="weaknesses" class="flex flex-wrap gap-2"></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(reg => console.log('SW 등록:', reg.scope))
-                    .catch(err => console.warn('SW 실패:', err));
-            });
-        }
-        const typeInfo = {
-            normal:{nm:'노말',color:'#A8A77A'},fire:{nm:'불꽃',color:'#EE8130'},water:{nm:'물',color:'#6390F0'},
-            electric:{nm:'전기',color:'#F7D02C'},grass:{nm:'풀',color:'#7AC74C'},ice:{nm:'얼음',color:'#96D9D6'},
-            fighting:{nm:'격투',color:'#C22E28'},poison:{nm:'독',color:'#A33EA1'},ground:{nm:'땅',color:'#E2BF65'},
-            flying:{nm:'비행',color:'#A98FF3'},psychic:{nm:'에스퍼',color:'#F95587'},bug:{nm:'벌레',color:'#A6B91A'},
-            rock:{nm:'바위',color:'#B6A136'},ghost:{nm:'고스트',color:'#735797'},dragon:{nm:'드래곤',color:'#6F35FC'},
-            steel:{nm:'강철',color:'#B7B7CE'},fairy:{nm:'페어리',color:'#D685AD'}
-        };
-        let koData = [];
-        async function initData() {
-            document.getElementById('loadingBox').classList.remove('hidden');
-            try {
-                const res = await fetch('https://raw.githubusercontent.com/sm-tcg/pokemon-ko-json/master/pokemon-ko.json');
-                koData = await res.json();
-            } catch(e) { console.error(e); }
-            document.getElementById('loadingBox').classList.add('hidden');
-        }
-        const searchInput = document.getElementById('searchInput');
-        const suggestionList = document.getElementById('suggestionList');
-        searchInput.addEventListener('input', (e) => {
-            const query = e.target.value.trim();
-            if (query.length < 1) { suggestionList.classList.add('hidden'); return; }
-            const filtered = koData.filter(p => p.name.includes(query)).slice(0, 15);
-            if (filtered.length > 0) {
-                suggestionList.innerHTML = filtered.map(p => `
-                    <div onclick="showDetail(${p.id}, '${p.name}')" class="p-5 border-b border-gray-50 active:bg-gray-100 flex justify-between items-center cursor-pointer">
-                        <span class="font-black text-gray-800">${p.name}</span>
-                        <span class="text-[10px] font-bold text-gray-300">#${String(p.id).padStart(4,'0')}</span>
-                    </div>
-                `).join('');
-                suggestionList.classList.remove('hidden');
-            } else { suggestionList.classList.add('hidden'); }
+</div>
+
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/pokemon-dex/sw.js', { scope: '/pokemon-dex/' })
+                .catch(e => console.warn('SW 실패:', e));
         });
-        async function showDetail(id, krName) {
-            suggestionList.classList.add('hidden');
-            document.getElementById('loadingBox').classList.remove('hidden');
-            document.getElementById('detailView').classList.add('hidden');
-            try {
-                const data = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`).then(r=>r.json());
-                document.getElementById('nameKr').innerText = krName;
-                document.getElementById('nameEn').innerText = data.name;
-                document.getElementById('pokeImg').src = data.sprites.other['official-artwork'].front_default;
-                const mainType = data.types[0].type.name;
-                document.getElementById('cardHeader').style.backgroundColor = typeInfo[mainType].color + '22';
-                const total = data.stats.reduce((acc,s)=>acc+s.base_stat,0);
-                document.getElementById('statTotal').innerText = total;
-                const statsLabels = {'hp':'HP','attack':'공격','defense':'방어','special-attack':'특공','special-defense':'특방','speed':'스피드'};
-                document.getElementById('statsBox').innerHTML = data.stats.map(s=>`
-                    <div class="flex items-center gap-4">
-                        <span class="text-[10px] font-black text-gray-400 w-10 uppercase">${statsLabels[s.stat.name]}</span>
-                        <span class="text-sm font-black text-gray-800 w-8 text-right">${s.base_stat}</span>
-                        <div class="flex-1 bg-gray-100 h-2 rounded-full overflow-hidden">
-                            <div class="stat-bar-fill h-full bg-gray-900" style="width:${(s.base_stat/200)*100}%"></div>
-                        </div>
+    }
+
+    const typeInfo = {
+        normal:{nm:'노말',color:'#A8A77A'},fire:{nm:'불꽃',color:'#EE8130'},water:{nm:'물',color:'#6390F0'},
+        electric:{nm:'전기',color:'#F7D02C'},grass:{nm:'풀',color:'#7AC74C'},ice:{nm:'얼음',color:'#96D9D6'},
+        fighting:{nm:'격투',color:'#C22E28'},poison:{nm:'독',color:'#A33EA1'},ground:{nm:'땅',color:'#E2BF65'},
+        flying:{nm:'비행',color:'#A98FF3'},psychic:{nm:'에스퍼',color:'#F95587'},bug:{nm:'벌레',color:'#A6B91A'},
+        rock:{nm:'바위',color:'#B6A136'},ghost:{nm:'고스트',color:'#735797'},dragon:{nm:'드래곤',color:'#6F35FC'},
+        steel:{nm:'강철',color:'#B7B7CE'},fairy:{nm:'페어리',color:'#D685AD'},dark:{nm:'악',color:'#705746'}
+    };
+
+    // 한국어 이름 → {id, enName} 매핑 (자주 쓰는 포켓몬 내장)
+    // PokeAPI pokemon-species에서 ko 이름을 캐싱한 데이터
+    const KO_MAP = {
+"이상해씨":{id:1,en:"bulbasaur"},"이상해풀":{id:2,en:"ivysaur"},"이상해꽃":{id:3,en:"venusaur"},
+"파이리":{id:4,en:"charmander"},"리자드":{id:5,en:"charmeleon"},"리자몽":{id:6,en:"charizard"},
+"꼬부기":{id:7,en:"squirtle"},"어니부기":{id:8,en:"wartortle"},"거북왕":{id:9,en:"blastoise"},
+"캐터피":{id:10,en:"caterpie"},"단데기":{id:11,en:"metapod"},"버터플":{id:12,en:"butterfree"},
+"뿔충이":{id:13,en:"weedle"},"딱충이":{id:14,en:"kakuna"},"독침붕":{id:15,en:"beedrill"},
+"구구":{id:16,en:"pidgey"},"피죤":{id:17,en:"pidgeotto"},"피죤투":{id:18,en:"pidgeot"},
+"꼬렛":{id:19,en:"rattata"},"레트라":{id:20,en:"raticate"},
+"깨비참":{id:21,en:"spearow"},"깨비드릴조":{id:22,en:"fearow"},
+"아보":{id:23,en:"ekans"},"아보크":{id:24,en:"arbok"},
+"피카츄":{id:25,en:"pikachu"},"라이츄":{id:26,en:"raichu"},
+"모래두지":{id:27,en:"sandshrew"},"고지":{id:28,en:"sandslash"},
+"니드런♀":{id:29,en:"nidoran-f"},"니드리나":{id:30,en:"nidorina"},"니드퀸":{id:31,en:"nidoqueen"},
+"니드런♂":{id:32,en:"nidoran-m"},"니드리노":{id:33,en:"nidorino"},"니드킹":{id:34,en:"nidoking"},
+"삐삐":{id:35,en:"clefairy"},"픽시":{id:36,en:"clefable"},
+"식스테일":{id:37,en:"vulpix"},"나인테일":{id:38,en:"ninetales"},
+"푸린":{id:39,en:"jigglypuff"},"푸크린":{id:40,en:"wigglytuff"},
+"주뱃":{id:41,en:"zubat"},"골뱃":{id:42,en:"golbat"},
+"뚜벅쵸":{id:43,en:"oddish"},"냄새꼴":{id:44,en:"gloom"},"라플레시아":{id:45,en:"vileplume"},
+"파라스":{id:46,en:"paras"},"파라섹트":{id:47,en:"parasect"},
+"콘팡":{id:48,en:"venonat"},"도나리":{id:49,en:"venomoth"},
+"디그다":{id:50,en:"diglett"},"닥트리오":{id:51,en:"dugtrio"},
+"나옹":{id:52,en:"meowth"},"페르시온":{id:53,en:"persian"},
+"고라파덕":{id:54,en:"psyduck"},"골덕":{id:55,en:"golduck"},
+"망키":{id:56,en:"mankey"},"성원숭":{id:57,en:"primeape"},
+"가디":{id:58,en:"growlithe"},"아캔":{id:59,en:"arcanine"},
+"발챙이":{id:60,en:"poliwag"},"슈륙챙이":{id:61,en:"poliwhirl"},"강챙이":{id:62,en:"poliwrath"},
+"케이시":{id:63,en:"abra"},"윤겔라":{id:64,en:"kadabra"},"후딘":{id:65,en:"alakazam"},
+"알통몬":{id:66,en:"machop"},"근육몬":{id:67,en:"machoke"},"괴력몬":{id:68,en:"machamp"},
+"덩쿠리":{id:69,en:"bellsprout"},"덩쿠나":{id:70,en:"weepinbell"},"덩쿠림보":{id:71,en:"victreebel"},
+"왕눈해":{id:72,en:"tentacool"},"독파리":{id:73,en:"tentacruel"},
+"롱스톤":{id:74,en:"geodude"},"딱구리":{id:75,en:"graveler"},"딱굴리":{id:76,en:"golem"},
+"포니타":{id:77,en:"ponyta"},"날쌘말":{id:78,en:"rapidash"},
+"야돈":{id:79,en:"slowpoke"},"야도란":{id:80,en:"slowbro"},
+"코일":{id:81,en:"magnemite"},"레어코일":{id:82,en:"magneton"},
+"파오리":{id:83,en:"farfetchd"},"두두":{id:84,en:"doduo"},"두트리오":{id:85,en:"dodrio"},
+"쥬쥬":{id:86,en:"seel"},"쥬레곤":{id:87,en:"dewgong"},
+"질퍽이":{id:88,en:"grimer"},"질뻐기":{id:89,en:"muk"},
+"셀러":{id:90,en:"shellder"},"파르셀":{id:91,en:"cloyster"},
+"고오스":{id:92,en:"gastly"},"고우스트":{id:93,en:"haunter"},"팬텀":{id:94,en:"gengar"},
+"롱돌":{id:95,en:"onix"},"슬리프":{id:96,en:"drowzee"},"슬리퍼":{id:97,en:"hypno"},
+"크랩":{id:98,en:"krabby"},"킹크랩":{id:99,en:"kingler"},
+"찌리리공":{id:100,en:"voltorb"},"붐볼":{id:101,en:"electrode"},
+"아라리":{id:102,en:"exeggcute"},"나시":{id:103,en:"exeggutor"},
+"탕구리":{id:104,en:"cubone"},"텅구리":{id:105,en:"marowak"},
+"시라소몬":{id:106,en:"hitmonlee"},"홍수몬":{id:107,en:"hitmonchan"},
+"내루미":{id:108,en:"lickitung"},"또가스":{id:109,en:"koffing"},"또도가스":{id:110,en:"weezing"},
+"뿔카이":{id:111,en:"rhyhorn"},"코뿌리":{id:112,en:"rhydon"},
+"럭키":{id:113,en:"chansey"},"덩쿠꽃":{id:114,en:"tangela"},
+"캥카":{id:115,en:"kangaskhan"},"쏘드라":{id:116,en:"horsea"},"시드라":{id:117,en:"seadra"},
+"콘치":{id:118,en:"goldeen"},"왕콘치":{id:119,en:"seaking"},
+"별가사리":{id:120,en:"staryu"},"아쿠스타":{id:121,en:"starmie"},
+"마임맨":{id:122,en:"mr-mime"},"스라크":{id:123,en:"scyther"},
+"루주라":{id:124,en:"jynx"},"에레브":{id:125,en:"electabuzz"},"마그마":{id:126,en:"magmar"},
+"쁘사이저":{id:127,en:"pinsir"},"켄타로스":{id:128,en:"tauros"},
+"잉어킹":{id:129,en:"magikarp"},"갸라도스":{id:130,en:"gyarados"},
+"라프라스":{id:131,en:"lapras"},"메타몽":{id:132,en:"ditto"},
+"이브이":{id:133,en:"eevee"},"샤미드":{id:134,en:"vaporeon"},"쥬피썬더":{id:135,en:"jolteon"},"불꽃숭이":{id:136,en:"flareon"},
+"폴리곤":{id:137,en:"porygon"},"암나이트":{id:138,en:"omanyte"},"암스타":{id:139,en:"omastar"},
+"투구":{id:140,en:"kabuto"},"투구푸스":{id:141,en:"kabutops"},
+"프테라":{id:142,en:"aerodactyl"},"잠만보":{id:143,en:"snorlax"},
+"프리져":{id:144,en:"articuno"},"썬더":{id:145,en:"zapdos"},"파이어":{id:146,en:"moltres"},
+"미니룡":{id:147,en:"dratini"},"해리룡":{id:148,en:"dragonair"},"망나뇽":{id:149,en:"dragonite"},
+"뮤츠":{id:150,en:"mewtwo"},"뮤":{id:151,en:"mew"},
+"치코리타":{id:152,en:"chikorita"},"베이리프":{id:153,en:"bayleef"},"메가니움":{id:154,en:"meganium"},
+"브케인":{id:155,en:"cyndaquil"},"마그케인":{id:156,en:"quilava"},"블레이범":{id:157,en:"typhlosion"},
+"리아코":{id:158,en:"totodile"},"엘리게이":{id:159,en:"croconaw"},"장크로다일":{id:160,en:"feraligatr"},
+"호호":{id:161,en:"sentret"},"다꼬리":{id:162,en:"furret"},
+"부우부":{id:163,en:"hoothoot"},"야부엉":{id:164,en:"noctowl"},
+"레디바":{id:165,en:"ledyba"},"레디안":{id:166,en:"ledian"},
+"스피어":{id:167,en:"spinarak"},"아리아도스":{id:168,en:"ariados"},
+"크로뱃":{id:169,en:"crobat"},"초라기":{id:170,en:"chinchou"},"랜턴":{id:171,en:"lanturn"},
+"피츄":{id:172,en:"pichu"},"크레페리":{id:173,en:"cleffa"},"푸푸린":{id:174,en:"igglybuff"},
+"토게피":{id:175,en:"togepi"},"토게틱":{id:176,en:"togetic"},
+"네이티":{id:177,en:"natu"},"네이티오":{id:178,en:"xatu"},
+"메리프":{id:179,en:"mareep"},"보송송":{id:180,en:"flaaffy"},"전룡":{id:181,en:"ampharos"},
+"두":{id:182,en:"bellossom"},"마릴":{id:183,en:"marill"},"마릴리":{id:184,en:"azumarill"},
+"나무돌이":{id:185,en:"sudowoodo"},"폴리곤2":{id:186,en:"politoed"},
+"호일":{id:187,en:"hoppip"},"두파팡":{id:188,en:"skiploom"},"솜솜코":{id:189,en:"jumpluff"},
+"에이팜":{id:190,en:"aipom"},"해너츠":{id:191,en:"sunkern"},"해너츠나":{id:192,en:"sunflora"},
+"왕자리":{id:193,en:"yanma"},"우파":{id:194,en:"wooper"},"누오":{id:195,en:"quagsire"},
+"에브이":{id:196,en:"espeon"},"블래키":{id:197,en:"umbreon"},
+"령코":{id:198,en:"murkrow"},"야도킹":{id:199,en:"slowking"},"무우마":{id:200,en:"misdreavus"},
+"안농":{id:201,en:"unown"},"소니아":{id:202,en:"wobbuffet"},
+"키링키":{id:203,en:"girafarig"},"단단지":{id:204,en:"pineco"},"포레토스":{id:205,en:"forretress"},
+"텅구리X":{id:206,en:"dunsparce"},"글라이거":{id:207,en:"gligar"},
+"강철톤":{id:208,en:"steelix"},"스라크로스":{id:209,en:"snubbull"},"그랑불":{id:210,en:"granbull"},
+"자리비앙":{id:211,en:"qwilfish"},"핫삼":{id:212,en:"scizor"},
+"쉘더X":{id:213,en:"shuckle"},"헤라크로스":{id:214,en:"heracross"},
+"포푸니":{id:215,en:"sneasel"},"뉴라":{id:216,en:"teddiursa"},"링곰":{id:217,en:"ursaring"},
+"마그카르고":{id:219,en:"magcargo"},"쪼마리":{id:220,en:"swinub"},"필로스":{id:221,en:"piloswine"},
+"코르솔라":{id:222,en:"corsola"},"레무리드":{id:223,en:"remoraid"},"만타인":{id:226,en:"mantine"},
+"강철톤X":{id:227,en:"skarmory"},"하운드":{id:228,en:"houndour"},"하운드움":{id:229,en:"houndoom"},
+"킹드라":{id:230,en:"kingdra"},"돈판":{id:231,en:"phanpy"},"코리갑":{id:232,en:"donphan"},
+"폴리곤Z":{id:233,en:"porygon2"},"앤테이":{id:244,en:"entei"},"라이코":{id:243,en:"raikou"},"스이쿤":{id:245,en:"suicune"},
+"라루라스":{id:238,en:"smoochum"},"에레키드":{id:239,en:"elekid"},"마그비":{id:240,en:"magby"},
+"밀탱크":{id:241,en:"miltank"},"해피너스":{id:242,en:"blissey"},
+"미뇽":{id:246,en:"larvitar"},"애버라스":{id:247,en:"pupitar"},"마기라스":{id:248,en:"tyranitar"},
+"루기아":{id:249,en:"lugia"},"칠색조":{id:250,en:"ho-oh"},"세레비":{id:251,en:"celebi"},
+"나무지기":{id:252,en:"treecko"},"나무돌기":{id:253,en:"grovyle"},"나무킹":{id:254,en:"sceptile"},
+"아차모":{id:255,en:"torchic"},"영치코":{id:256,en:"combusken"},"번치코":{id:257,en:"blaziken"},
+"물짱이":{id:258,en:"mudkip"},"늪짱이":{id:259,en:"marshtomp"},"대짱이":{id:260,en:"swampert"},
+"포챠나":{id:261,en:"poochyena"},"그라에나":{id:262,en:"mightyena"},
+"지그제구리":{id:263,en:"zigzagoon"},"직구리":{id:264,en:"linoone"},
+"풋배기":{id:265,en:"wurmple"},"실쿤":{id:266,en:"silcoon"},"뷰티플라이":{id:267,en:"beautifly"},
+"카스쿤":{id:268,en:"cascoon"},"더스트나":{id:269,en:"dustox"},
+"로토스":{id:270,en:"lotad"},"로파파":{id:271,en:"lombre"},"루디콜로":{id:272,en:"ludicolo"},
+"씨앗나":{id:273,en:"seedot"},"싹스러":{id:274,en:"nuzleaf"},"쉬프리":{id:275,en:"shiftry"},
+"테일로":{id:276,en:"taillow"},"스왈로":{id:277,en:"swellow"},
+"윙걸":{id:278,en:"wingull"},"펠리퍼":{id:279,en:"pelipper"},
+"랄토스":{id:280,en:"ralts"},"킬리아":{id:281,en:"kirlia"},"가디안":{id:282,en:"gardevoir"},
+"마자용":{id:283,en:"surskit"},"마스카인":{id:284,en:"masquerain"},
+"버섯꼬":{id:285,en:"shroomish"},"깜볼":{id:286,en:"breloom"},
+"게을로":{id:287,en:"slakoth"},"비구술":{id:288,en:"vigoroth"},"게을킹":{id:289,en:"slaking"},
+"코나이":{id:290,en:"nincada"},"발바닥":{id:291,en:"ninjask"},"허수비":{id:292,en:"shedinja"},
+"소리겐":{id:293,en:"whismur"},"굉음괴":{id:294,en:"loudred"},"폭음룡":{id:295,en:"exploud"},
+"마크탱":{id:296,en:"makuhita"},"하리테":{id:297,en:"hariyama"},
+"마릴리X":{id:298,en:"azurill"},"노공룡":{id:299,en:"nosepass"},
+"스컹꼬":{id:300,en:"skitty"},"스컹탱":{id:301,en:"delcatty"},
+"깜놀":{id:302,en:"sableye"},"핫삼Jr":{id:303,en:"mawile"},
+"코터스":{id:304,en:"aron"},"강코":{id:305,en:"lairon"},"보스로라":{id:306,en:"aggron"},
+"메디링":{id:307,en:"meditite"},"메디컴":{id:308,en:"medicham"},
+"플러시":{id:309,en:"electrike"},"마이농":{id:310,en:"manectric"},
+"플러리":{id:311,en:"plusle"},"마이농2":{id:312,en:"minun"},
+"볼비트":{id:313,en:"volbeat"},"네오비트":{id:314,en:"illumise"},
+"장미어리":{id:315,en:"roselia"},"굴다리":{id:316,en:"gulpin"},"위글":{id:317,en:"swalot"},
+"샤프도":{id:318,en:"carvanha"},"샤크니아":{id:319,en:"sharpedo"},
+"왓슨":{id:320,en:"wailmer"},"왕왓슨":{id:321,en:"wailord"},
+"누멜":{id:322,en:"numel"},"캐맥돈":{id:323,en:"camerupt"},
+"코터스2":{id:324,en:"torkoal"},"스왑":{id:325,en:"spoink"},"그런피그":{id:326,en:"grumpig"},
+"스팬다":{id:327,en:"spinda"},"트랩인치":{id:328,en:"trapinch"},"바이브라바":{id:329,en:"vibrava"},"플라이곤":{id:330,en:"flygon"},
+"선인왕":{id:331,en:"cacnea"},"선인장":{id:332,en:"cacturne"},
+"켄호로우":{id:333,en:"swablu"},"알타리아":{id:334,en:"altaria"},
+"바리비나":{id:335,en:"zangoose"},"하파리":{id:336,en:"seviper"},
+"루나톤":{id:337,en:"lunatone"},"솔록":{id:338,en:"solrock"},
+"지렁":{id:339,en:"barboach"},"미꾸리":{id:340,en:"whiscash"},
+"크랩":{id:341,en:"corphish"},"크라보스":{id:342,en:"crawdaunt"},
+"발챙이2":{id:343,en:"baltoy"},"고지지":{id:344,en:"claydol"},
+"릴리요":{id:345,en:"lileep"},"아말도":{id:346,en:"cradily"},
+"아노딥스":{id:347,en:"anorith"},"아말도2":{id:348,en:"armaldo"},
+"피라스":{id:349,en:"feebas"},"밀로틱":{id:350,en:"milotic"},
+"폴리곤3":{id:351,en:"castform"},"코산호":{id:352,en:"kecleon"},
+"팬텀2":{id:353,en:"shuppet"},"해골봉":{id:354,en:"banette"},
+"꼬마귀신":{id:355,en:"duskull"},"팬텀3":{id:356,en:"dusclops"},
+"트로피우스":{id:357,en:"tropius"},"치라치노":{id:358,en:"chimecho"},
+"앱솔":{id:359,en:"absol"},"눈꼬마":{id:361,en:"snorunt"},"글레이시아":{id:471,en:"glaceon"},
+"리아코2":{id:360,en:"wynaut"},"코스모그":{id:789,en:"cosmog"},
+"관도":{id:363,en:"spheal"},"씰리온":{id:364,en:"sealeo"},"씰팅게":{id:365,en:"walrein"},
+"조개닌자":{id:366,en:"clamperl"},"헌테일":{id:367,en:"huntail"},"고어바이트":{id:368,en:"gorebyss"},
+"러브카스":{id:369,en:"relicanth"},"레인볼트":{id:370,en:"luvdisc"},
+"아공이":{id:371,en:"bagon"},"쉘곤":{id:372,en:"shelgon"},"보만다":{id:373,en:"salamence"},
+"메탕":{id:374,en:"beldum"},"메탕구":{id:375,en:"metang"},"메타그로스":{id:376,en:"metagross"},
+"레지락":{id:377,en:"regirock"},"레지아이스":{id:378,en:"regice"},"레지스틸":{id:379,en:"registeel"},
+"라티아스":{id:380,en:"latias"},"라티오스":{id:381,en:"latios"},
+"가이오가":{id:382,en:"kyogre"},"그란돈":{id:383,en:"groudon"},"레쿠쟈":{id:384,en:"rayquaza"},
+"쟝고":{id:385,en:"jirachi"},"데오키시스":{id:386,en:"deoxys"},
+"도롱마니":{id:387,en:"turtwig"},"도롱충이":{id:388,en:"grotle"},"토대부기":{id:389,en:"torterra"},
+"불꽃숭이2":{id:390,en:"chimchar"},"파이숭이":{id:391,en:"monferno"},"초염몽":{id:392,en:"infernape"},
+"팽도리":{id:393,en:"piplup"},"팽태자":{id:394,en:"prinplup"},"엠페르트":{id:395,en:"empoleon"},
+"찌르꼬":{id:396,en:"starly"},"찌르버드":{id:397,en:"staravia"},"찌르호크":{id:398,en:"staraptor"},
+"비버니":{id:399,en:"bidoof"},"비버통":{id:400,en:"bibarel"},
+"도롱뇽":{id:401,en:"kricketot"},"귀뚤뚤":{id:402,en:"kricketune"},
+"신비이":{id:403,en:"shinx"},"럭스여":{id:404,en:"luxio"},"럭시오":{id:405,en:"luxray"},
+"로즈레이드":{id:407,en:"roserade"},"두빅굿":{id:408,en:"cranidos"},"람파드":{id:409,en:"rampardos"},
+"방패카비":{id:410,en:"shieldon"},"도태왕":{id:411,en:"bastiodon"},
+"워글":{id:415,en:"combee"},"비퀸":{id:416,en:"vespiquen"},
+"파치리스":{id:417,en:"pachirisu"},"부이젤":{id:418,en:"buizel"},"플로젤":{id:419,en:"floatzel"},
+"체리보":{id:420,en:"cherubi"},"체리꽃":{id:421,en:"cherrim"},
+"쉘로스":{id:422,en:"shellos"},"가스파르":{id:423,en:"gastrodon"},
+"에테보스":{id:424,en:"ambipom"},"흘림뿡":{id:425,en:"drifloon"},"흘림벌룬":{id:426,en:"drifblim"},
+"입치트":{id:427,en:"buneary"},"이어롤":{id:428,en:"lopunny"},
+"무우마직":{id:429,en:"mismagius"},"흑야도사":{id:430,en:"honchkrow"},
+"글램보우":{id:431,en:"glameow"},"퍼르르":{id:432,en:"purugly"},
+"꼬지지":{id:433,en:"chingling"},"도치":{id:434,en:"stunky"},"도치마루":{id:435,en:"skuntank"},
+"브론조":{id:436,en:"bronzor"},"브론종":{id:437,en:"bronzong"},
+"꾸꾸리":{id:438,en:"bonsly"},"흉내내":{id:439,en:"mime-jr"},
+"핵 해피너스":{id:440,en:"happiny"},"불비달마":{id:441,en:"chatot"},
+"망령신사":{id:442,en:"spiritomb"},"킬가루":{id:443,en:"gible"},"가부리아스":{id:444,en:"gabite"},"가브리아스":{id:445,en:"garchomp"},
+"마내미":{id:446,en:"munchlax"},"망나뇽2":{id:447,en:"riolu"},"루카리오":{id:448,en:"lucario"},
+"하마돈":{id:449,en:"hippopotas"},"하마예스":{id:450,en:"hippowdon"},
+"스콜피":{id:451,en:"skorupi"},"드래피온":{id:452,en:"drapion"},
+"독개굴":{id:453,en:"croagunk"},"독개비":{id:454,en:"toxicroak"},
+"카르나":{id:455,en:"carnivine"},"파닥파닥":{id:456,en:"finneon"},"네오라이트":{id:457,en:"lumineon"},
+"만타인2":{id:458,en:"mantyke"},"눈쓰개":{id:459,en:"snover"},"눈설왕":{id:460,en:"abomasnow"},
+"포푸니라":{id:461,en:"weavile"},"레어코일2":{id:462,en:"magnezone"},
+"쁜트리카":{id:463,en:"lickilicky"},"코뿌리2":{id:464,en:"rhyperior"},
+"덩쿠꽃2":{id:465,en:"tangrowth"},"에레키블":{id:466,en:"electivire"},"마그마번":{id:467,en:"magmortar"},
+"토게키스":{id:468,en:"togekiss"},"왕자리공":{id:469,en:"yanmega"},
+"리피아":{id:470,en:"leafeon"},"눈여아":{id:471,en:"glaceon"},"글라이온":{id:472,en:"gliscor"},
+"맘모꾸리":{id:473,en:"mamoswine"},"폴리곤Z2":{id:474,en:"porygon-z"},
+"엘레이드":{id:475,en:"gallade"},"대코지":{id:476,en:"probopass"},
+"더스크놀":{id:477,en:"dusknoir"},"프로스라스":{id:478,en:"froslass"},
+"로토무":{id:479,en:"rotom"},"유크시":{id:480,en:"uxie"},"엠리트":{id:481,en:"mesprit"},"아그놈":{id:482,en:"azelf"},
+"디아루가":{id:483,en:"dialga"},"펄기아":{id:484,en:"palkia"},"히드런":{id:485,en:"heatran"},
+"레지기가스":{id:486,en:"regigigas"},"기라티나":{id:487,en:"giratina"},
+"크레세리아":{id:488,en:"cresselia"},"피오네":{id:489,en:"phione"},"마나피":{id:490,en:"manaphy"},
+"다크라이":{id:491,en:"darkrai"},"쉐이미":{id:492,en:"shaymin"},"아르세우스":{id:493,en:"arceus"},
+"비크티니":{id:494,en:"victini"},
+"츠타자":{id:495,en:"snivy"},"자뚜보":{id:496,en:"servine"},"쟈로다":{id:497,en:"serperior"},
+"뚜꾸리":{id:498,en:"tepig"},"차오꿀":{id:499,en:"pignite"},"염무왕":{id:500,en:"emboar"},
+"미즈고로":{id:501,en:"oshawott"},"후완나":{id:502,en:"dewott"},"대검귀":{id:503,en:"samurott"},
+"ｹﾞｯｺｳｶﾞ":{id:658,en:"greninja"},
+"고고트":{id:673,en:"gogoat"},"루차불":{id:701,en:"hawlucha"},
+"화살꼬빈":{id:661,en:"fletchling"},"파이어로":{id:663,en:"talonflame"},
+"나비코":{id:664,en:"scatterbug"},"비비용":{id:666,en:"vivillon"},
+"레오꼬":{id:667,en:"litleo"},"화염사자":{id:668,en:"pyroar"},
+"페어리꽃":{id:669,en:"flabebe"},"플로렐리아":{id:671,en:"florges"},
+"디안시":{id:719,en:"diancie"},"후파":{id:720,en:"hoopa"},"볼케니온":{id:721,en:"volcanion"},
+"마기아나":{id:801,en:"magearna"},"마샤도":{id:802,en:"marshadow"},
+"네크로즈마":{id:800,en:"necrozma"},"루나알라":{id:792,en:"lunala"},"솔가레오":{id:791,en:"solgaleo"},
+"꼬마젠":{id:827,en:"nickit"},"대검귀2":{id:823,en:"corviknight"},
+"망나뇽3":{id:840,en:"applin"},"사과몬":{id:841,en:"flapple"},
+"치갈구":{id:816,en:"sobble"},"인텔리레온":{id:818,en:"inteleon"},
+"어리버리":{id:819,en:"skwovet"},"다람쥐왕":{id:820,en:"greedent"},
+"달막화":{id:850,en:"sizzlipede"},"불꽃지네":{id:851,en:"centiskorch"},
+"모스노우":{id:873,en:"frosmoth"},"오롱털":{id:858,en:"impidimp"},
+"빈티나":{id:856,en:"hatenna"},"조리안":{id:857,en:"hattrem"},"모자피아":{id:858,en:"hatterene"},
+"주황닌자":{id:876,en:"indeedee"},
+"무한다이노":{id:890,en:"eternatus"},"자마젠타":{id:889,en:"zamazenta"},"자시안":{id:888,en:"zacian"},
+"모스빌":{id:891,en:"kubfu"},"우라오스":{id:892,en:"urshifu"},
+"코코로":{id:893,en:"zarude"},
+"레지에레키":{id:894,en:"regieleki"},"레지드래고":{id:895,en:"regidrago"},
+"블리자포스":{id:896,en:"glastrier"},"스펙트리어":{id:897,en:"spectrier"},
+"칼레도":{id:898,en:"calyrex"},
+"치린":{id:230,en:"kingdra"},
+"스이쿤2":{id:245,en:"suicune"},
+"와루비알":{id:633,en:"deino"},"쟈노비":{id:634,en:"zweilous"},"사자도":{id:635,en:"hydreigon"},
+"라란티스":{id:754,en:"lurantis"},"미미큐":{id:778,en:"mimikyu"},
+"실버디":{id:773,en:"silvally"},"타입:눌":{id:772,en:"type-null"},
+"루가루암":{id:745,en:"lycanroc"},"나가네델":{id:804,en:"naganadel"},
+"울트라네크로즈마":{id:800,en:"necrozma"},
+"코스모움":{id:790,en:"cosmoem"},"소르가레오":{id:791,en:"solgaleo"},
+"지우개":{id:351,en:"castform"},
+"에이스번":{id:815,en:"cinderace"},"고릴타":{id:812,en:"rillaboom"},
+"텅빈크리스탈":{id:854,en:"sinistea"},"폴테거이스트":{id:855,en:"polteageist"},
+"드래펄트":{id:887,en:"dragapult"},"도란치":{id:885,en:"dreepy"},"도란카":{id:886,en:"drakloak"},
+"라플레시아2":{id:315,en:"roselia"},
+"무한다이맥스":{id:890,en:"eternatus"}
+    };
+
+    const searchInput = document.getElementById('searchInput');
+    const suggestionList = document.getElementById('suggestionList');
+
+    searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.trim();
+        if (query.length < 1) { suggestionList.classList.add('hidden'); return; }
+        const filtered = Object.entries(KO_MAP)
+            .filter(([name]) => name.includes(query))
+            .slice(0, 15);
+        if (filtered.length > 0) {
+            suggestionList.innerHTML = filtered.map(([name, data]) => `
+                <div onclick="showDetail(${data.id}, '${name}')" class="p-5 border-b border-gray-50 active:bg-gray-100 flex justify-between items-center cursor-pointer">
+                    <span class="font-black text-gray-800">${name}</span>
+                    <span class="text-[10px] font-bold text-gray-300">#${String(data.id).padStart(4,'0')}</span>
+                </div>
+            `).join('');
+            suggestionList.classList.remove('hidden');
+        } else { suggestionList.classList.add('hidden'); }
+    });
+
+    async function showDetail(id, krName) {
+        suggestionList.classList.add('hidden');
+        document.getElementById('loadingBox').classList.remove('hidden');
+        document.getElementById('detailView').classList.add('hidden');
+        try {
+            const data = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`).then(r => r.json());
+            document.getElementById('nameKr').innerText = krName;
+            document.getElementById('nameEn').innerText = data.name;
+            document.getElementById('pokeImg').src = data.sprites.other['official-artwork'].front_default;
+            const mainType = data.types[0].type.name;
+            document.getElementById('cardHeader').style.backgroundColor = typeInfo[mainType].color + '22';
+            const total = data.stats.reduce((acc, s) => acc + s.base_stat, 0);
+            document.getElementById('statTotal').innerText = total;
+            const statsLabels = {'hp':'HP','attack':'공격','defense':'방어','special-attack':'특공','special-defense':'특방','speed':'스피드'};
+            document.getElementById('statsBox').innerHTML = data.stats.map(s => `
+                <div class="flex items-center gap-4">
+                    <span class="text-[10px] font-black text-gray-400 w-10 uppercase">${statsLabels[s.stat.name]}</span>
+                    <span class="text-sm font-black text-gray-800 w-8 text-right">${s.base_stat}</span>
+                    <div class="flex-1 bg-gray-100 h-2 rounded-full overflow-hidden">
+                        <div class="stat-bar-fill h-full bg-gray-900" style="width:${(s.base_stat/200)*100}%"></div>
                     </div>
-                `).join('');
-                const abilities = await Promise.all(data.abilities.map(async a => {
-                    const d = await fetch(a.ability.url).then(r=>r.json());
-                    const nameKr = d.names.find(n=>n.language.name==='ko')?.name || a.ability.name;
-                    const descKr = d.flavor_text_entries.find(e=>e.language.name==='ko'&&(e.version_group.name==='scarlet-violet'||e.version_group.name==='sword-shield'))?.flavor_text || '설명이 준비되지 않았습니다.';
-                    return `<div class="bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                        <p class="text-sm font-black text-gray-900 mb-1">${nameKr}<span class="text-[10px] text-red-500 ml-1">${a.is_hidden?'숨겨진 특성':''}</span></p>
-                        <p class="text-xs text-gray-500 leading-relaxed">${descKr}</p>
-                    </div>`;
-                }));
-                document.getElementById('abilityBox').innerHTML = abilities.join('');
-                await calculateTypeRelations(data.types);
-                document.getElementById('detailView').classList.remove('hidden');
-                window.scrollTo({top:document.getElementById('detailView').offsetTop-100,behavior:'smooth'});
-            } catch(e) { alert('데이터를 불러오지 못했습니다.'); }
-            document.getElementById('loadingBox').classList.add('hidden');
+                </div>
+            `).join('');
+            const abilities = await Promise.all(data.abilities.map(async a => {
+                const d = await fetch(a.ability.url).then(r => r.json());
+                const nameKr = d.names.find(n => n.language.name === 'ko')?.name || a.ability.name;
+                const descKr = d.flavor_text_entries.find(e => e.language.name === 'ko' && (e.version_group.name === 'scarlet-violet' || e.version_group.name === 'sword-shield'))?.flavor_text || '설명이 준비되지 않았습니다.';
+                return `<div class="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                    <p class="text-sm font-black text-gray-900 mb-1">${nameKr}<span class="text-[10px] text-red-500 ml-1">${a.is_hidden ? '숨겨진 특성' : ''}</span></p>
+                    <p class="text-xs text-gray-500 leading-relaxed">${descKr}</p>
+                </div>`;
+            }));
+            document.getElementById('abilityBox').innerHTML = abilities.join('');
+            await calculateTypeRelations(data.types);
+            document.getElementById('detailView').classList.remove('hidden');
+            window.scrollTo({ top: document.getElementById('detailView').offsetTop - 100, behavior: 'smooth' });
+        } catch(e) { alert('데이터를 불러오지 못했습니다: ' + e.message); }
+        document.getElementById('loadingBox').classList.add('hidden');
+    }
+
+    async function calculateTypeRelations(types) {
+        let multipliers = {};
+        Object.keys(typeInfo).forEach(t => multipliers[t] = 1.0);
+        for (const t of types) {
+            const d = await fetch(`https://pokeapi.co/api/v2/type/${t.type.name}`).then(r => r.json());
+            d.damage_relations.double_damage_from.forEach(it => multipliers[it.name] *= 2.0);
+            d.damage_relations.half_damage_from.forEach(it => multipliers[it.name] *= 0.5);
+            d.damage_relations.no_damage_from.forEach(it => multipliers[it.name] *= 0.0);
         }
-        async function calculateTypeRelations(types) {
-            let multipliers = {};
-            Object.keys(typeInfo).forEach(t=>multipliers[t]=1.0);
-            for (const t of types) {
-                const d = await fetch(`https://pokeapi.co/api/v2/type/${t.type.name}`).then(r=>r.json());
-                d.damage_relations.double_damage_from.forEach(it=>multipliers[it.name]*=2.0);
-                d.damage_relations.half_damage_from.forEach(it=>multipliers[it.name]*=0.5);
-                d.damage_relations.no_damage_from.forEach(it=>multipliers[it.name]*=0.0);
-            }
-            const strengths=[], weaknesses=[];
-            for (const [type,mult] of Object.entries(multipliers)) {
-                const badge=`<span class="type-badge shadow-sm" style="background:${typeInfo[type].color}">${typeInfo[type].nm} <small class="opacity-70">${mult}x</small></span>`;
-                if(mult<1.0) strengths.push(badge);
-                else if(mult>1.0) weaknesses.push(badge);
-            }
-            document.getElementById('strengths').innerHTML = strengths.length?strengths.join(''):'<span class="text-xs text-gray-300 font-bold">없음</span>';
-            document.getElementById('weaknesses').innerHTML = weaknesses.length?weaknesses.join(''):'<span class="text-xs text-gray-300 font-bold">없음</span>';
+        const strengths = [], weaknesses = [];
+        for (const [type, mult] of Object.entries(multipliers)) {
+            if (!typeInfo[type]) continue;
+            const badge = `<span class="type-badge shadow-sm" style="background:${typeInfo[type].color}">${typeInfo[type].nm} <small class="opacity-70">${mult}x</small></span>`;
+            if (mult < 1.0) strengths.push(badge);
+            else if (mult > 1.0) weaknesses.push(badge);
         }
-        initData();
-    </script>
+        document.getElementById('strengths').innerHTML = strengths.length ? strengths.join('') : '<span class="text-xs text-gray-300 font-bold">없음</span>';
+        document.getElementById('weaknesses').innerHTML = weaknesses.length ? weaknesses.join('') : '<span class="text-xs text-gray-300 font-bold">없음</span>';
+    }
+</script>
 </body>
 </html>

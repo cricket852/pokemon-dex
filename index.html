@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>포켓몬 챔피언스 도감</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ef4444">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="챔피언스덱스">
+    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;700;900&display=swap');
+        body { font-family: 'Pretendard', sans-serif; -webkit-font-smoothing: antialiased; }
+        .type-badge { padding: 4px 10px; border-radius: 8px; color: white; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+        .stat-bar-fill { transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .hide-scroll::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen font-sans">
+    <div class="max-w-md mx-auto p-4 pb-20">
+        <div class="sticky top-0 bg-gray-100 pt-4 pb-4 z-30">
+            <div class="flex items-center justify-between mb-4">
+                <h1 class="text-2xl font-black text-gray-900 tracking-tighter">포켓몬 챔피언스 도감</h1>
+                <span class="text-[10px] font-bold bg-white px-2 py-1 rounded-full text-red-500 shadow-sm border border-red-50">Live: 2026-04-18</span>
+            </div>
+            <div class="relative shadow-xl rounded-2xl">
+                <input type="text" id="searchInput" placeholder="이름 입력 (예: 루카리오, 가디안)"
+                    class="w-full p-5 rounded-2xl border-none focus:ring-2 focus:ring-red-500 outline-none text-lg font-bold">
+                <div id="loadingBox" class="absolute right-5 top-5 hidden">
+                    <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-red-500"></div>
+                </div>
+            </div>
+            <div id="suggestionList" class="mt-2 bg-white rounded-2xl shadow-2xl max-h-80 overflow-y-auto hidden hide-scroll border border-gray-100"></div>
+        </div>
+        <div id="detailView" class="hidden">
+            <div class="bg-white rounded-[2.5rem] shadow-2xl overflow-hidden mb-6 border border-white">
+                <div id="cardHeader" class="p-10 text-center relative transition-colors duration-500">
+                    <img id="pokeImg" src="" alt="" class="w-56 h-56 mx-auto drop-shadow-2xl z-10 relative">
+                    <h2 id="nameKr" class="text-4xl font-black text-gray-900 mt-6 tracking-tight"></h2>
+                    <p id="nameEn" class="text-gray-400 text-sm font-bold tracking-widest uppercase mt-1"></p>
+                </div>
+                <div class="p-8">
+                    <div class="flex justify-between items-end mb-6">
+                        <span class="text-gray-400 font-black text-[10px] uppercase tracking-[0.2em]">Total Stats</span>
+                        <span id="statTotal" class="text-5xl font-black text-gray-900 leading-none"></span>
+                    </div>
+                    <div id="statsBox" class="space-y-4 mb-10"></div>
+                    <div class="mb-10">
+                        <h3 class="text-sm font-black text-gray-900 mb-4 flex items-center gap-2">
+                            <span class="w-1 h-4 bg-red-500 rounded-full"></span> 특성 정보
+                        </h3>
+                        <div id="abilityBox" class="space-y-3"></div>
+                    </div>
+                    <div class="space-y-6">
+                        <div>
+                            <h3 class="text-sm font-black text-blue-600 mb-3 uppercase tracking-tighter italic">강점 (반감 이하)</h3>
+                            <div id="strengths" class="flex flex-wrap gap-2"></div>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-black text-red-600 mb-3 uppercase tracking-tighter italic">약점 (2배 이상)</h3>
+                            <div id="weaknesses" class="flex flex-wrap gap-2"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('SW 등록:', reg.scope))
+                    .catch(err => console.warn('SW 실패:', err));
+            });
+        }
+        const typeInfo = {
+            normal:{nm:'노말',color:'#A8A77A'},fire:{nm:'불꽃',color:'#EE8130'},water:{nm:'물',color:'#6390F0'},
+            electric:{nm:'전기',color:'#F7D02C'},grass:{nm:'풀',color:'#7AC74C'},ice:{nm:'얼음',color:'#96D9D6'},
+            fighting:{nm:'격투',color:'#C22E28'},poison:{nm:'독',color:'#A33EA1'},ground:{nm:'땅',color:'#E2BF65'},
+            flying:{nm:'비행',color:'#A98FF3'},psychic:{nm:'에스퍼',color:'#F95587'},bug:{nm:'벌레',color:'#A6B91A'},
+            rock:{nm:'바위',color:'#B6A136'},ghost:{nm:'고스트',color:'#735797'},dragon:{nm:'드래곤',color:'#6F35FC'},
+            steel:{nm:'강철',color:'#B7B7CE'},fairy:{nm:'페어리',color:'#D685AD'}
+        };
+        let koData = [];
+        async function initData() {
+            document.getElementById('loadingBox').classList.remove('hidden');
+            try {
+                const res = await fetch('https://raw.githubusercontent.com/sm-tcg/pokemon-ko-json/master/pokemon-ko.json');
+                koData = await res.json();
+            } catch(e) { console.error(e); }
+            document.getElementById('loadingBox').classList.add('hidden');
+        }
+        const searchInput = document.getElementById('searchInput');
+        const suggestionList = document.getElementById('suggestionList');
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.trim();
+            if (query.length < 1) { suggestionList.classList.add('hidden'); return; }
+            const filtered = koData.filter(p => p.name.includes(query)).slice(0, 15);
+            if (filtered.length > 0) {
+                suggestionList.innerHTML = filtered.map(p => `
+                    <div onclick="showDetail(${p.id}, '${p.name}')" class="p-5 border-b border-gray-50 active:bg-gray-100 flex justify-between items-center cursor-pointer">
+                        <span class="font-black text-gray-800">${p.name}</span>
+                        <span class="text-[10px] font-bold text-gray-300">#${String(p.id).padStart(4,'0')}</span>
+                    </div>
+                `).join('');
+                suggestionList.classList.remove('hidden');
+            } else { suggestionList.classList.add('hidden'); }
+        });
+        async function showDetail(id, krName) {
+            suggestionList.classList.add('hidden');
+            document.getElementById('loadingBox').classList.remove('hidden');
+            document.getElementById('detailView').classList.add('hidden');
+            try {
+                const data = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`).then(r=>r.json());
+                document.getElementById('nameKr').innerText = krName;
+                document.getElementById('nameEn').innerText = data.name;
+                document.getElementById('pokeImg').src = data.sprites.other['official-artwork'].front_default;
+                const mainType = data.types[0].type.name;
+                document.getElementById('cardHeader').style.backgroundColor = typeInfo[mainType].color + '22';
+                const total = data.stats.reduce((acc,s)=>acc+s.base_stat,0);
+                document.getElementById('statTotal').innerText = total;
+                const statsLabels = {'hp':'HP','attack':'공격','defense':'방어','special-attack':'특공','special-defense':'특방','speed':'스피드'};
+                document.getElementById('statsBox').innerHTML = data.stats.map(s=>`
+                    <div class="flex items-center gap-4">
+                        <span class="text-[10px] font-black text-gray-400 w-10 uppercase">${statsLabels[s.stat.name]}</span>
+                        <span class="text-sm font-black text-gray-800 w-8 text-right">${s.base_stat}</span>
+                        <div class="flex-1 bg-gray-100 h-2 rounded-full overflow-hidden">
+                            <div class="stat-bar-fill h-full bg-gray-900" style="width:${(s.base_stat/200)*100}%"></div>
+                        </div>
+                    </div>
+                `).join('');
+                const abilities = await Promise.all(data.abilities.map(async a => {
+                    const d = await fetch(a.ability.url).then(r=>r.json());
+                    const nameKr = d.names.find(n=>n.language.name==='ko')?.name || a.ability.name;
+                    const descKr = d.flavor_text_entries.find(e=>e.language.name==='ko'&&(e.version_group.name==='scarlet-violet'||e.version_group.name==='sword-shield'))?.flavor_text || '설명이 준비되지 않았습니다.';
+                    return `<div class="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                        <p class="text-sm font-black text-gray-900 mb-1">${nameKr}<span class="text-[10px] text-red-500 ml-1">${a.is_hidden?'숨겨진 특성':''}</span></p>
+                        <p class="text-xs text-gray-500 leading-relaxed">${descKr}</p>
+                    </div>`;
+                }));
+                document.getElementById('abilityBox').innerHTML = abilities.join('');
+                await calculateTypeRelations(data.types);
+                document.getElementById('detailView').classList.remove('hidden');
+                window.scrollTo({top:document.getElementById('detailView').offsetTop-100,behavior:'smooth'});
+            } catch(e) { alert('데이터를 불러오지 못했습니다.'); }
+            document.getElementById('loadingBox').classList.add('hidden');
+        }
+        async function calculateTypeRelations(types) {
+            let multipliers = {};
+            Object.keys(typeInfo).forEach(t=>multipliers[t]=1.0);
+            for (const t of types) {
+                const d = await fetch(`https://pokeapi.co/api/v2/type/${t.type.name}`).then(r=>r.json());
+                d.damage_relations.double_damage_from.forEach(it=>multipliers[it.name]*=2.0);
+                d.damage_relations.half_damage_from.forEach(it=>multipliers[it.name]*=0.5);
+                d.damage_relations.no_damage_from.forEach(it=>multipliers[it.name]*=0.0);
+            }
+            const strengths=[], weaknesses=[];
+            for (const [type,mult] of Object.entries(multipliers)) {
+                const badge=`<span class="type-badge shadow-sm" style="background:${typeInfo[type].color}">${typeInfo[type].nm} <small class="opacity-70">${mult}x</small></span>`;
+                if(mult<1.0) strengths.push(badge);
+                else if(mult>1.0) weaknesses.push(badge);
+            }
+            document.getElementById('strengths').innerHTML = strengths.length?strengths.join(''):'<span class="text-xs text-gray-300 font-bold">없음</span>';
+            document.getElementById('weaknesses').innerHTML = weaknesses.length?weaknesses.join(''):'<span class="text-xs text-gray-300 font-bold">없음</span>';
+        }
+        initData();
+    </script>
+</body>
+</html>

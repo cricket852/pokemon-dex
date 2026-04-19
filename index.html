@@ -27,7 +27,7 @@
             <span class="text-[10px] font-bold bg-white px-2 py-1 rounded-full text-red-500 shadow-sm border border-red-50">Season M-1</span>
         </div>
         <div class="relative shadow-xl rounded-2xl">
-            <input type="text" id="searchInput" placeholder="이름 입력 (예: 루카리오, 가브리아스)"
+                placeholder="이름 입력 (예: 루카리오, 한카리아스)"
                 class="w-full p-5 rounded-2xl border-none focus:ring-2 focus:ring-red-500 outline-none text-lg font-bold">
             <div id="loadingBox" class="absolute right-5 top-5 hidden">
                 <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-red-500"></div>
@@ -38,7 +38,8 @@
 
     <div id="detailView" class="hidden">
         <div class="bg-white rounded-[2.5rem] shadow-2xl overflow-hidden mb-6">
-            <div id="cardHeader" class="p-10 text-center transition-colors duration-500">
+            <div id="cardHeader" class="p-10 text-center transition-colors duration-500 relative">
+                <button onclick="closeDetail()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-white bg-opacity-70 text-gray-400 hover:text-gray-700 hover:bg-opacity-100 shadow text-lg font-black">✕</button>
                 <img id="pokeImg" src="" alt="" class="w-56 h-56 mx-auto drop-shadow-2xl">
                 <h2 id="nameKr" class="text-4xl font-black text-gray-900 mt-6 tracking-tight"></h2>
                 <p id="nameEn" class="text-gray-400 text-sm font-bold tracking-widest uppercase mt-1"></p>
@@ -76,6 +77,12 @@ if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/pokemon-dex/sw.js', { scope: '/pokemon-dex/' })
             .catch(function(e) { console.warn('SW 실패:', e); });
     });
+}
+
+function closeDetail() {
+    document.getElementById('detailView').classList.add('hidden');
+    document.getElementById('searchInput').value = '';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 var typeInfo = {
@@ -164,9 +171,9 @@ var KO_MAP = {
     "도태왕":{id:411,en:"bastiodon"},
     "이어롤":{id:428,en:"lopunny"},
     "망령신사":{id:442,en:"spiritomb"},
-    "가브리아스":{id:445,en:"garchomp"},
+    "한카리아스":{id:445,en:"garchomp"},
     "루카리오":{id:448,en:"lucario"},
-    "하마예스":{id:450,en:"hippowdon"},
+    "하마돈":{id:450,en:"hippowdon"},
     "독개비":{id:454,en:"toxicroak"},
     "눈설왕":{id:460,en:"abomasnow"},
     "포푸니라":{id:461,en:"weavile"},
@@ -303,7 +310,7 @@ var KO_NAMES = {
     324:"코터스",334:"알타리아",350:"밀로틱",351:"폴리곤2",354:"해골봉",
     358:"치렁",359:"앱솔",362:"글라이",389:"토대부기",392:"초염몽",
     395:"엠페르트",405:"럭시오",407:"로즈레이드",409:"람파드",411:"도태왕",
-    428:"이어롤",442:"망령신사",445:"가브리아스",448:"루카리오",450:"하마예스",
+    428:"이어롤",442:"망령신사",445:"한카리아스",448:"루카리오",450:"하마돈",
     454:"독개비",460:"눈설왕",461:"포푸니라",464:"코뿌리",470:"리피아",
     471:"글레이시아",472:"글라이온",473:"맘모꾸리",475:"엘레이드",478:"프로스라스",
     479:"로토무",497:"쟈로다",500:"염무왕",503:"대검귀",505:"망경꾼",

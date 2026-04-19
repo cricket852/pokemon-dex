@@ -21,13 +21,14 @@
 </head>
 <body class="bg-gray-100 min-h-screen font-sans">
 <div class="max-w-md mx-auto p-4 pb-20">
+
     <div class="sticky top-0 bg-gray-100 pt-4 pb-4 z-30">
         <div class="flex items-center justify-between mb-4">
             <h1 class="text-2xl font-black text-gray-900 tracking-tighter">포켓몬 챔피언스 도감</h1>
             <span class="text-[10px] font-bold bg-white px-2 py-1 rounded-full text-red-500 shadow-sm border border-red-50">Season M-1</span>
         </div>
         <div class="relative shadow-xl rounded-2xl">
-                placeholder="이름 입력 (예: 루카리오, 한카리아스)"
+            <input type="text" id="searchInput" placeholder="이름 입력 (예: 루카리오, 한카리아스)"
                 class="w-full p-5 rounded-2xl border-none focus:ring-2 focus:ring-red-500 outline-none text-lg font-bold">
             <div id="loadingBox" class="absolute right-5 top-5 hidden">
                 <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-red-500"></div>
@@ -39,7 +40,7 @@
     <div id="detailView" class="hidden">
         <div class="bg-white rounded-[2.5rem] shadow-2xl overflow-hidden mb-6">
             <div id="cardHeader" class="p-10 text-center transition-colors duration-500 relative">
-                <button onclick="closeDetail()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-white bg-opacity-70 text-gray-400 hover:text-gray-700 hover:bg-opacity-100 shadow text-lg font-black">✕</button>
+                <button onclick="closeDetail()" class="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full bg-white shadow-md text-gray-400 text-base font-black hover:text-gray-800 active:scale-90 transition-all z-10">✕</button>
                 <img id="pokeImg" src="" alt="" class="w-56 h-56 mx-auto drop-shadow-2xl">
                 <h2 id="nameKr" class="text-4xl font-black text-gray-900 mt-6 tracking-tight"></h2>
                 <p id="nameEn" class="text-gray-400 text-sm font-bold tracking-widest uppercase mt-1"></p>
@@ -69,8 +70,8 @@
             </div>
         </div>
     </div>
-</div>
 
+</div>
 <script>
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
@@ -94,255 +95,76 @@ var typeInfo = {
     steel:{nm:'강철',color:'#B7B7CE'},fairy:{nm:'페어리',color:'#D685AD'},dark:{nm:'악',color:'#705746'}
 };
 
-// 포켓몬 챔피언스 정식 로스터 (Serebii 기준, 2026-04-18)
-// 메가진화 포함, 지역폼 포함
-var KO_MAP = {
-    // 1세대
-    "이상해꽃":{id:3,en:"venusaur"},
-    "리자몽":{id:6,en:"charizard"},
-    "거북왕":{id:9,en:"blastoise"},
-    "독침붕":{id:15,en:"beedrill"},
-    "피죤투":{id:18,en:"pidgeot"},
-    "아보크":{id:24,en:"arbok"},
-    "피카츄":{id:25,en:"pikachu"},
-    "라이츄":{id:26,en:"raichu"},
-    "픽시":{id:36,en:"clefable"},
-    "나인테일":{id:38,en:"ninetales"},
-    "아캔":{id:59,en:"arcanine"},
-    "후딘":{id:65,en:"alakazam"},
-    "괴력몬":{id:68,en:"machamp"},
-    "덩쿠림보":{id:71,en:"victreebel"},
-    "야도란":{id:80,en:"slowbro"},
-    "팬텀":{id:94,en:"gengar"},
-    "캥카":{id:115,en:"kangaskhan"},
-    "아쿠스타":{id:121,en:"starmie"},
-    "쁘사이저":{id:127,en:"pinsir"},
-    "켄타로스":{id:128,en:"tauros"},
-    "갸라도스":{id:130,en:"gyarados"},
-    "메타몽":{id:132,en:"ditto"},
-    "샤미드":{id:134,en:"vaporeon"},
-    "쥬피썬더":{id:135,en:"jolteon"},
-    "불꽃숭이":{id:136,en:"flareon"},
-    "프테라":{id:142,en:"aerodactyl"},
-    "잠만보":{id:143,en:"snorlax"},
-    "망나뇽":{id:149,en:"dragonite"},
-    // 2세대
-    "메가니움":{id:154,en:"meganium"},
-    "블레이범":{id:157,en:"typhlosion"},
-    "장크로다일":{id:160,en:"feraligatr"},
-    "아리아도스":{id:168,en:"ariados"},
-    "전룡":{id:181,en:"ampharos"},
-    "마릴리":{id:184,en:"azumarill"},
-    "폴리토드":{id:186,en:"politoed"},
-    "에브이":{id:196,en:"espeon"},
-    "블래키":{id:197,en:"umbreon"},
-    "야도킹":{id:199,en:"slowking"},
-    "포레토스":{id:205,en:"forretress"},
-    "강철톤":{id:208,en:"steelix"},
-    "핫삼":{id:212,en:"scizor"},
-    "헤라크로스":{id:214,en:"heracross"},
-    "강철톤(갈라르)":{id:227,en:"skarmory"},
-    "하운드움":{id:229,en:"houndoom"},
-    "마기라스":{id:248,en:"tyranitar"},
-    // 3세대
-    "펠리퍼":{id:279,en:"pelipper"},
-    "가디안":{id:282,en:"gardevoir"},
-    "깜놀":{id:302,en:"sableye"},
-    "보스로라":{id:306,en:"aggron"},
-    "메디컴":{id:308,en:"medicham"},
-    "마이농":{id:310,en:"manectric"},
-    "샤크니아":{id:319,en:"sharpedo"},
-    "캐맥돈":{id:323,en:"camerupt"},
-    "코터스":{id:324,en:"torkoal"},
-    "알타리아":{id:334,en:"altaria"},
-    "밀로틱":{id:350,en:"milotic"},
-    "폴리곤2":{id:351,en:"castform"},
-    "해골봉":{id:354,en:"banette"},
-    "치렁":{id:358,en:"chimecho"},
-    "앱솔":{id:359,en:"absol"},
-    "글라이":{id:362,en:"glalie"},
-    // 4세대
-    "토대부기":{id:389,en:"torterra"},
-    "초염몽":{id:392,en:"infernape"},
-    "엠페르트":{id:395,en:"empoleon"},
-    "럭시오":{id:405,en:"luxray"},
-    "로즈레이드":{id:407,en:"roserade"},
-    "람파드":{id:409,en:"rampardos"},
-    "도태왕":{id:411,en:"bastiodon"},
-    "이어롤":{id:428,en:"lopunny"},
-    "망령신사":{id:442,en:"spiritomb"},
-    "한카리아스":{id:445,en:"garchomp"},
-    "루카리오":{id:448,en:"lucario"},
-    "하마돈":{id:450,en:"hippowdon"},
-    "독개비":{id:454,en:"toxicroak"},
-    "눈설왕":{id:460,en:"abomasnow"},
-    "포푸니라":{id:461,en:"weavile"},
-    "코뿌리2":{id:464,en:"rhyperior"},
-    "리피아":{id:470,en:"leafeon"},
-    "글레이시아":{id:471,en:"glaceon"},
-    "글라이온":{id:472,en:"gliscor"},
-    "맘모꾸리":{id:473,en:"mamoswine"},
-    "엘레이드":{id:475,en:"gallade"},
-    "프로스라스":{id:478,en:"froslass"},
-    "로토무":{id:479,en:"rotom"},
-    // 5세대
-    "쟈로다":{id:497,en:"serperior"},
-    "염무왕":{id:500,en:"emboar"},
-    "대검귀":{id:503,en:"samurott"},
-    "망경꾼":{id:505,en:"watchog"},
-    "레파르다스":{id:510,en:"liepard"},
-    "야나프":{id:512,en:"simisage"},
-    "바오프":{id:514,en:"simisear"},
-    "히야프":{id:516,en:"simipour"},
-    "드릴벙커":{id:530,en:"excadrill"},
-    "tabunne":{id:531,en:"audino"},
-    "블리조스":{id:534,en:"conkeldurr"},
-    "엘풍":{id:547,en:"whimsicott"},
-    "악비아르":{id:553,en:"krookodile"},
-    "데스마스":{id:563,en:"cofagrigus"},
-    "더스트나":{id:569,en:"garbodor"},
-    "조로아크":{id:571,en:"zoroark"},
-    "유니란":{id:579,en:"reuniclus"},
-    "배바닐라":{id:584,en:"vanilluxe"},
-    "에모":{id:587,en:"emolga"},
-    "샹델라":{id:609,en:"chandelure"},
-    "툰베어":{id:614,en:"beartic"},
-    "가메노스":{id:618,en:"stunfisk"},
-    "골루그":{id:623,en:"golurk"},
-    "히드레이곤":{id:635,en:"hydreigon"},
-    "우루가모스":{id:637,en:"volcarona"},
-    // 6세대
-    "브리가론":{id:652,en:"chesnaught"},
-    "마폭시":{id:655,en:"delphox"},
-    "개굴닌자":{id:658,en:"greninja"},
-    "홀로":{id:660,en:"diggersby"},
-    "파이어로":{id:663,en:"talonflame"},
-    "비비용":{id:666,en:"vivillon"},
-    "에터나":{id:670,en:"floette"},
-    "플로렐리아":{id:671,en:"florges"},
-    "판도라":{id:675,en:"pangoro"},
-    "트리밍":{id:676,en:"furfrou"},
-    "니ャ스퍼":{id:678,en:"meowstic"},
-    "기라티나폼":{id:681,en:"aegislash"},
-    "아로마티스":{id:683,en:"aromatisse"},
-    "슈슈프":{id:685,en:"slurpuff"},
-    "망나뇽X":{id:693,en:"clawitzer"},
-    "헬리오스크":{id:695,en:"heliolisk"},
-    "가메노스2":{id:697,en:"tyrantrum"},
-    "아마루르가":{id:699,en:"aurorus"},
-    "닌피아":{id:700,en:"sylveon"},
-    "루차불":{id:701,en:"hawlucha"},
-    "데덴네":{id:702,en:"dedenne"},
-    "누메일라":{id:706,en:"goodra"},
-    "클레페키":{id:707,en:"klefki"},
-    "오거폰":{id:709,en:"trevenant"},
-    "호빵몬":{id:711,en:"gourgeist"},
-    "크레베이스":{id:713,en:"avalugg"},
-    "온바트":{id:715,en:"noivern"},
-    // 7세대
-    "결지우기":{id:724,en:"decidueye"},
-    "가오개":{id:727,en:"incineroar"},
-    "아시레느":{id:730,en:"primarina"},
-    "왱왱조":{id:733,en:"toucannon"},
-    "야돈구리":{id:740,en:"crabominable"},
-    "루가루암":{id:745,en:"lycanroc"},
-    "투구삼":{id:748,en:"toxapex"},
-    "반마":{id:750,en:"mudsdale"},
-    "아쿠쉐이프":{id:752,en:"araquanid"},
-    "엔니":{id:758,en:"salazzle"},
-    "아마카지":{id:763,en:"tsareena"},
-    "ナッシー(알로라)":{id:765,en:"oranguru"},
-    "나게키라":{id:766,en:"passimian"},
-    "미미큐":{id:778,en:"mimikyu"},
-    "드람파":{id:780,en:"drampa"},
-    "코모루모":{id:784,en:"kommo-o"},
-    // 8세대
-    "아머가":{id:823,en:"corviknight"},
-    "사과몬":{id:841,en:"flapple"},
-    "사과귀신":{id:842,en:"appletun"},
-    "한다리굼":{id:844,en:"sandaconda"},
-    "폴테거이스트":{id:855,en:"polteageist"},
-    "모자피아":{id:858,en:"hatterene"},
-    "미스터라임":{id:866,en:"mr-rime"},
-    "데스바른":{id:867,en:"runerigus"},
-    "마호밀크":{id:869,en:"alcremie"},
-    "모르페코":{id:877,en:"morpeko"},
-    "드래펄트":{id:887,en:"dragapult"},
-    // 히스이폼
-    "와이드":{id:899,en:"wyrdeer"},
-    "클레베":{id:900,en:"kleavor"},
-    "바스쿨레기온":{id:902,en:"basculegion"},
-    "스네즐러":{id:903,en:"sneasler"},
-    // 9세대
-    "마스카니아":{id:908,en:"meowscarada"},
-    "뻐꾸리":{id:911,en:"skeledirge"},
-    "쿼크퀴바":{id:914,en:"quaquaval"},
-    "マウホールド":{id:925,en:"maushold"},
-    "가르간나클":{id:934,en:"garganacl"},
-    "아머가도":{id:936,en:"armarouge"},
-    "세레지에":{id:937,en:"ceruledge"},
-    "이루루":{id:939,en:"bellibolt"},
-    "스코빌런":{id:952,en:"scovillain"},
-    "에스파테라":{id:956,en:"espathra"},
-    "테라파고스":{id:959,en:"tinkaton"},
-    "팔라핀":{id:964,en:"palafin"},
-    "도로치":{id:968,en:"orthworm"},
-    "글리무라":{id:970,en:"glimmora"},
-    "ノノクラゲ":{id:981,en:"farigiraf"},
-    "킹갬빗":{id:983,en:"kingambit"},
-    "シンistcha":{id:1013,en:"sinistcha"},
-    "아르카루돈":{id:1018,en:"archaludon"},
-    "히드라프르":{id:1019,en:"hydrapple"}
+// 포켓몬 챔피언스 로스터 (Serebii 기준) — 한국어 이름으로 검색
+var SEARCH_MAP = {
+    "이상해꽃":{id:3},"리자몽":{id:6},"거북왕":{id:9},
+    "독침붕":{id:15},"피죤투":{id:18},"아보크":{id:24},
+    "피카츄":{id:25},"라이츄":{id:26},"픽시":{id:36},
+    "나인테일":{id:38},"아캔":{id:59},"후딘":{id:65},
+    "괴력몬":{id:68},"덩쿠림보":{id:71},"야도란":{id:80},
+    "팬텀":{id:94},"캥카":{id:115},"아쿠스타":{id:121},
+    "쁘사이저":{id:127},"켄타로스":{id:128},"갸라도스":{id:130},
+    "메타몽":{id:132},"샤미드":{id:134},"쥬피썬더":{id:135},
+    "불꽃숭이":{id:136},"프테라":{id:142},"잠만보":{id:143},
+    "망나뇽":{id:149},
+    "메가니움":{id:154},"블레이범":{id:157},"장크로다일":{id:160},
+    "아리아도스":{id:168},"전룡":{id:181},"마릴리":{id:184},
+    "폴리토드":{id:186},"에브이":{id:196},"블래키":{id:197},
+    "야도킹":{id:199},"포레토스":{id:205},"강철톤":{id:208},
+    "핫삼":{id:212},"헤라크로스":{id:214},"스카모리":{id:227},
+    "하운드움":{id:229},"마기라스":{id:248},
+    "펠리퍼":{id:279},"가디안":{id:282},"깜놀":{id:302},
+    "보스로라":{id:306},"메디컴":{id:308},"마이농":{id:310},
+    "샤크니아":{id:319},"캐맥돈":{id:323},"코터스":{id:324},
+    "알타리아":{id:334},"밀로틱":{id:350},"캐스핌":{id:351},
+    "해골봉":{id:354},"치렁":{id:358},"앱솔":{id:359},
+    "글라이":{id:362},
+    "토대부기":{id:389},"초염몽":{id:392},"엠페르트":{id:395},
+    "럭시오":{id:405},"로즈레이드":{id:407},"람파드":{id:409},
+    "도태왕":{id:411},"이어롤":{id:428},"망령신사":{id:442},
+    "한카리아스":{id:445},"루카리오":{id:448},"하마돈":{id:450},
+    "독개비":{id:454},"눈설왕":{id:460},"포푸니라":{id:461},
+    "코뿌리":{id:464},"리피아":{id:470},"글레이시아":{id:471},
+    "글라이온":{id:472},"맘모꾸리":{id:473},"엘레이드":{id:475},
+    "프로스라스":{id:478},"로토무":{id:479},
+    "쟈로다":{id:497},"염무왕":{id:500},"대검귀":{id:503},
+    "망경꾼":{id:505},"레파르다스":{id:510},"야나프":{id:512},
+    "바오프":{id:514},"히야프":{id:516},"드릴벙커":{id:530},
+    "어디번":{id:531},"블리조스":{id:534},"엘풍":{id:547},
+    "악비아르":{id:553},"데스마스":{id:563},"더스트나":{id:569},
+    "조로아크":{id:571},"유니란":{id:579},"배바닐라":{id:584},
+    "에모":{id:587},"샹델라":{id:609},"툰베어":{id:614},
+    "가메노스":{id:618},"골루그":{id:623},"히드레이곤":{id:635},
+    "우루가모스":{id:637},
+    "브리가론":{id:652},"마폭시":{id:655},"개굴닌자":{id:658},
+    "홀로":{id:660},"파이어로":{id:663},"비비용":{id:666},
+    "에터나":{id:670},"플로렐리아":{id:671},"판도라":{id:675},
+    "트리밍":{id:676},"니야스퍼":{id:678},"기라티나폼":{id:681},
+    "아로마티스":{id:683},"슈슈프":{id:685},"클라우쳐":{id:693},
+    "헬리오스크":{id:695},"티란트룸":{id:697},"아마루르가":{id:699},
+    "닌피아":{id:700},"루차불":{id:701},"데덴네":{id:702},
+    "누메일라":{id:706},"클레페키":{id:707},"트레방트":{id:709},
+    "호빵몬":{id:711},"크레베이스":{id:713},"온바트":{id:715},
+    "결지우기":{id:724},"가오개":{id:727},"아시레느":{id:730},
+    "왱왱조":{id:733},"야돈구리":{id:740},"루가루암":{id:745},
+    "투구삼":{id:748},"반마":{id:750},"아쿠쉐이프":{id:752},
+    "엔니":{id:758},"아마카지":{id:763},"오랑우루":{id:765},
+    "나게키라":{id:766},"미미큐":{id:778},"드람파":{id:780},
+    "코모루모":{id:784},
+    "아머가":{id:823},"사과몬":{id:841},"사과귀신":{id:842},
+    "한다리굼":{id:844},"폴테거이스트":{id:855},"모자피아":{id:858},
+    "미스터라임":{id:866},"데스바른":{id:867},"마호밀크":{id:869},
+    "모르페코":{id:877},"드래펄트":{id:887},
+    "와이드":{id:899},"클레베":{id:900},"바스쿨레기온":{id:902},
+    "스네즐러":{id:903},
+    "마스카니아":{id:908},"스켈디르지":{id:911},"쿼크퀴바":{id:914},
+    "마우호울드":{id:925},"가르간나클":{id:934},"아머가도":{id:936},
+    "세레지에":{id:937},"이루루":{id:939},"스코빌런":{id:952},
+    "에스파테라":{id:956},"팅카톤":{id:959},"팔라핀":{id:964},
+    "도로치":{id:968},"글리무라":{id:970},"파리지라프":{id:981},
+    "킹갬빗":{id:983},"신이스차":{id:1013},"아르카루돈":{id:1018},
+    "히드라프르":{id:1019}
 };
-
-// 한국어 이름 보정 (위 영어명 기반으로 PokeAPI ko 이름 매핑)
-var KO_NAMES = {
-    3:"이상해꽃",6:"리자몽",9:"거북왕",15:"독침붕",18:"피죤투",24:"아보크",
-    25:"피카츄",26:"라이츄",36:"픽시",38:"나인테일",59:"아캔",65:"후딘",
-    68:"괴력몬",71:"덩쿠림보",80:"야도란",94:"팬텀",115:"캥카",121:"아쿠스타",
-    127:"쁘사이저",128:"켄타로스",130:"갸라도스",132:"메타몽",134:"샤미드",
-    135:"쥬피썬더",136:"불꽃숭이",142:"프테라",143:"잠만보",149:"망나뇽",
-    154:"메가니움",157:"블레이범",160:"장크로다일",168:"아리아도스",181:"전룡",
-    184:"마릴리",186:"폴리토드",196:"에브이",197:"블래키",199:"야도킹",
-    205:"포레토스",208:"강철톤",212:"핫삼",214:"헤라크로스",227:"스카모리",
-    229:"하운드움",248:"마기라스",279:"펠리퍼",282:"가디안",302:"깜놀",
-    306:"보스로라",308:"메디컴",310:"마이농",319:"샤크니아",323:"캐맥돈",
-    324:"코터스",334:"알타리아",350:"밀로틱",351:"폴리곤2",354:"해골봉",
-    358:"치렁",359:"앱솔",362:"글라이",389:"토대부기",392:"초염몽",
-    395:"엠페르트",405:"럭시오",407:"로즈레이드",409:"람파드",411:"도태왕",
-    428:"이어롤",442:"망령신사",445:"한카리아스",448:"루카리오",450:"하마돈",
-    454:"독개비",460:"눈설왕",461:"포푸니라",464:"코뿌리",470:"리피아",
-    471:"글레이시아",472:"글라이온",473:"맘모꾸리",475:"엘레이드",478:"프로스라스",
-    479:"로토무",497:"쟈로다",500:"염무왕",503:"대검귀",505:"망경꾼",
-    510:"레파르다스",512:"야나프",514:"바오프",516:"히야프",530:"드릴벙커",
-    531:"어디번",534:"블리조스",547:"엘풍",553:"악비아르",563:"데스마스",
-    569:"더스트나",571:"조로아크",579:"유니란",584:"배바닐라",587:"에모",
-    609:"샹델라",614:"툰베어",618:"가메노스",623:"골루그",635:"히드레이곤",
-    637:"우루가모스",652:"브리가론",655:"마폭시",658:"개굴닌자",660:"홀로",
-    663:"파이어로",666:"비비용",670:"에터나",671:"플로렐리아",675:"판도라",
-    676:"트리밍",678:"니야스퍼",681:"기라티나폼",683:"아로마티스",685:"슈슈프",
-    693:"클라우쳐",695:"헬리오스크",697:"가메노스2",699:"아마루르가",700:"닌피아",
-    701:"루차불",702:"데덴네",706:"누메일라",707:"클레페키",709:"트레방트",
-    711:"호빵몬",713:"크레베이스",715:"온바트",724:"결지우기",727:"가오개",
-    730:"아시레느",733:"왱왱조",740:"야돈구리",745:"루가루암",748:"투구삼",
-    750:"반마",752:"아쿠쉐이프",758:"엔니",763:"아마카지",765:"오랑우(알로라)",
-    766:"나게키라",778:"미미큐",780:"드람파",784:"코모루모",823:"아머가",
-    841:"사과몬",842:"사과귀신",844:"한다리굼",855:"폴테거이스트",858:"모자피아",
-    866:"미스터라임",867:"데스바른",869:"마호밀크",877:"모르페코",887:"드래펄트",
-    899:"와이드",900:"클레베",902:"바스쿨레기온",903:"스네즐러",908:"마스카니아",
-    911:"스켈디르지",914:"쿼크퀴바",925:"마우호울드",934:"가르간나클",
-    936:"아머가도",937:"세레지에",939:"이루루",952:"스코빌런",956:"에스파테라",
-    959:"팅카톤",964:"팔라핀",968:"도로치",970:"글리무라",981:"ファリギラフ",
-    983:"킹갬빗",1013:"신이스차",1018:"아르카루돈",1019:"히드라프르"
-};
-
-// KO_MAP을 ID 기반으로 재구성 (한글 이름 → id)
-var SEARCH_MAP = {};
-Object.entries(KO_NAMES).forEach(function(entry) {
-    var id = parseInt(entry[0]);
-    var name = entry[1];
-    SEARCH_MAP[name] = { id: id };
-});
 
 var searchInput = document.getElementById('searchInput');
 var suggestionList = document.getElementById('suggestionList');
@@ -392,19 +214,19 @@ async function showDetail(id, krName) {
                 '<span class="text-[10px] font-black text-gray-400 w-10 uppercase">' + (statsLabels[s.stat.name] || s.stat.name) + '</span>' +
                 '<span class="text-sm font-black text-gray-800 w-8 text-right">' + s.base_stat + '</span>' +
                 '<div class="flex-1 bg-gray-100 h-2 rounded-full overflow-hidden">' +
-                '<div class="stat-bar-fill h-full bg-gray-900" style="width:' + (s.base_stat/200*100) + '%"></div>' +
+                '<div class="stat-bar-fill h-full bg-gray-900" style="width:' + (s.base_stat / 200 * 100) + '%"></div>' +
                 '</div></div>';
         }).join('');
         var abilities = await Promise.all(data.abilities.map(async function(a) {
             var d = await fetch(a.ability.url).then(function(r) { return r.json(); });
             var nameEntry = d.names.find(function(n) { return n.language.name === 'ko'; });
-            var nameKr = nameEntry ? nameEntry.name : a.ability.name;
+            var abilityNameKr = nameEntry ? nameEntry.name : a.ability.name;
             var descEntry = d.flavor_text_entries.find(function(e) {
                 return e.language.name === 'ko' && (e.version_group.name === 'scarlet-violet' || e.version_group.name === 'sword-shield');
             });
             var descKr = descEntry ? descEntry.flavor_text : '설명이 준비되지 않았습니다.';
             return '<div class="bg-gray-50 p-4 rounded-2xl border border-gray-100">' +
-                '<p class="text-sm font-black text-gray-900 mb-1">' + nameKr +
+                '<p class="text-sm font-black text-gray-900 mb-1">' + abilityNameKr +
                 '<span class="text-[10px] text-red-500 ml-1">' + (a.is_hidden ? '숨겨진 특성' : '') + '</span></p>' +
                 '<p class="text-xs text-gray-500 leading-relaxed">' + descKr + '</p></div>';
         }));

@@ -477,6 +477,35 @@ async function showDetail(id, krName) {
     document.getElementById('loadingBox').classList.add('hidden');
 }
 
+// 타입 상성표 (공격측 기준: typeChart[공격타입][방어타입] = 배율)
+var typeChart = {
+    normal:{rock:0.5,ghost:0,steel:0.5},
+    fire:{fire:0.5,water:0.5,grass:2,ice:2,bug:2,rock:0.5,dragon:0.5,steel:2},
+    water:{fire:2,water:0.5,grass:0.5,ground:2,rock:2,dragon:0.5},
+    electric:{water:2,electric:0.5,grass:0.5,ground:0,flying:2,dragon:0.5},
+    grass:{fire:0.5,water:2,grass:0.5,poison:0.5,ground:2,flying:0.5,bug:0.5,rock:2,dragon:0.5,steel:0.5},
+    ice:{fire:0.5,water:0.5,grass:2,ground:2,flying:2,dragon:2,steel:0.5},
+    fighting:{normal:2,ice:2,rock:2,dark:2,steel:2,poison:0.5,flying:0.5,psychic:0.5,bug:0.5,fairy:0.5,ghost:0},
+    poison:{grass:2,poison:0.5,ground:0.5,rock:0.5,ghost:0.5,steel:0,fairy:2},
+    ground:{fire:2,electric:2,grass:0.5,poison:2,flying:0,bug:0.5,rock:2,steel:2},
+    flying:{electric:0.5,grass:2,fighting:2,bug:2,rock:0.5,steel:0.5},
+    psychic:{fighting:2,poison:2,psychic:0.5,steel:0.5,dark:0},
+    bug:{fire:0.5,grass:2,fighting:0.5,poison:0.5,flying:0.5,psychic:2,ghost:0.5,dark:2,steel:0.5,fairy:0.5},
+    rock:{fire:2,ice:2,flying:2,bug:2,fighting:0.5,ground:0.5,steel:0.5},
+    ghost:{normal:0,psychic:2,ghost:2,dark:0.5},
+    dragon:{dragon:2,steel:0.5,fairy:0},
+    dark:{fighting:0.5,psychic:2,ghost:2,dark:0.5,fairy:0.5},
+    steel:{fire:0.5,water:0.5,electric:0.5,ice:2,rock:2,fairy:2,steel:0.5,poison:0},
+    fairy:{fire:0.5,fighting:2,poison:0.5,dragon:2,dark:2,steel:0.5}
+};
+// 미정의 조합은 1로 채우기
+Object.keys(typeInfo).forEach(function(a) {
+    if (!typeChart[a]) typeChart[a] = {};
+    Object.keys(typeInfo).forEach(function(b) {
+        if (typeChart[a][b] === undefined) typeChart[a][b] = 1;
+    });
+});
+
 async function calculateTypeRelations(types) {
     var multipliers = {};
     Object.keys(typeInfo).forEach(function(t) { multipliers[t] = 1.0; });
@@ -496,6 +525,51 @@ async function calculateTypeRelations(types) {
     });
     document.getElementById('strengths').innerHTML = strengths.length ? strengths.join('') : '<span class="text-xs text-gray-300 font-bold">없음</span>';
     document.getElementById('weaknesses').innerHTML = weaknesses.length ? weaknesses.join('') : '<span class="text-xs text-gray-300 font-bold">없음</span>';
+
+    // 상대할 때 추천 타입 계산
+    // oppTypes: 현재 포켓몬의 타입들 (방어측)
+    var oppTypes = types.map(function(t) { return t.type.name; });
+    var results = [];
+    Object.keys(typeInfo).forEach(function(myType) {
+        // 내 타입이 상대에게 가하는 공격 배율
+        var atk = 1.0;
+        oppTypes.forEach(function(oppType) {
+            atk *= typeChart[myType][oppType] || 1;
+        });
+        // 상대 타입이 내 타입에게 가하는 방어 배율 (평균)
+        var def = 1.0;
+        oppTypes.forEach(function(oppType) {
+            def *= typeChart[oppType][myType] || 1;
+        });
+        var score = atk * (def > 0 ? 1 / def : 4);
+        var label = '';
+        if (atk >= 2 && def <= 0.5) label = '최적';
+        else if (atk >= 2) label = '공격 유리';
+        else if (def <= 0.5) label = '방어 유리';
+        else return; // 유리한 조건 없으면 제외
+        results.push({ type: myType, atk: atk, def: def, label: label, score: score });
+    });
+    results.sort(function(a, b) {
+        var order = { '최적': 0, '공격 유리': 1, '방어 유리': 2 };
+        if (order[a.label] !== order[b.label]) return order[a.label] - order[b.label];
+        return b.score - a.score;
+    });
+    if (results.length === 0) {
+        document.getElementById('counterBox').innerHTML = '<span class="text-xs text-gray-300 font-bold">추천 타입 없음</span>';
+        return;
+    }
+    var counterHtml = results.slice(0, 8).map(function(r) {
+        var labelColor = r.label === '최적' ? '#22c55e' : r.label === '공격 유리' ? '#3b82f6' : '#a855f7';
+        var labelBg = r.label === '최적' ? '#f0fdf4' : r.label === '공격 유리' ? '#eff6ff' : '#faf5ff';
+        return '<div class="flex items-center justify-between rounded-2xl px-4 py-3 border border-gray-100" style="background:' + labelBg + '">' +
+            '<div class="flex items-center gap-2">' +
+            '<span class="type-badge" style="background:' + typeInfo[r.type].color + '">' + typeInfo[r.type].nm + '</span>' +
+            '<span class="text-[11px] font-black" style="color:' + labelColor + '">' + r.label + '</span>' +
+            '</div>' +
+            '<div class="text-[11px] text-gray-400 font-bold">공 ' + r.atk + 'x &nbsp; 피 ' + r.def + 'x</div>' +
+            '</div>';
+    }).join('');
+    document.getElementById('counterBox').innerHTML = counterHtml;
 }
 </script>
 </body>
